@@ -34,7 +34,7 @@ export const projectFileSuffix = '.graphcool'
 export const schemaFileSuffix = '.graphql'
 export const exampleSchema = `\
 # \`User\` is a system type with special characteristics.
-# You can read about it in the documentation: 
+# You can read about it in the documentation:
 # https://www.graph.cool/docs/reference/schema/system-artifacts-uhieg2shio/#user-type
 type User {
   id: ID! @isUnique
@@ -43,7 +43,7 @@ type User {
 }
 
 # \`File\` is a system type with special characteristics.
-# You can read about it in the documentation: 
+# You can read about it in the documentation:
 # https://www.graph.cool/docs/reference/schema/system-artifacts-uhieg2shio/#file-type
 type File {
   id: ID! @isUnique
@@ -57,7 +57,7 @@ type File {
 }
 
 # You can easily add custom types, here is an example.
-# If you want to add the \`Tweet\` type to your schema, 
+# If you want to add the \`Tweet\` type to your schema,
 # remove the below comments and run \`graphcool push\`.
 # type Tweet {
 #   text: String!
@@ -94,7 +94,7 @@ type File {
 
 ###########################################################################
 # You can easily add custom definitions, \`Tweet\` below is an example.
-# If you want to add \`Tweet\` to your schema, 
+# If you want to add \`Tweet\` to your schema,
 # remove the below comments and run \`graphcool push\`.
 ###########################################################################
 
@@ -145,12 +145,12 @@ Whoops, something went wrong while creating the project.
 // `
 
 export const projectAlreadyExistsMessage = (projectFiles: string[]) => `\
-Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in current directory, looks like you've already setup your backend. You can still use 
+Found ${projectFiles.length} project ${projectFiles.length === 1 ? 'file' : 'files'} in current directory, looks like you've already setup your backend. You can still use
 `
 
 export const howDoYouWantToGetStarted = () => `\
 
-  You are about to create a new Graphcool project. 
+  You are about to create a new Graphcool project.
 
 
   ${chalk.bold('How do you want to continue?')}
@@ -172,6 +172,10 @@ export const noProjectFileForPushMessage = `\
 Please provide a valid project file (${graphcoolProjectFileName}) for the schema migration.
 `
 
+export const noProjectFileForImportMessage = `\
+Please provide a valid project file (${graphcoolProjectFileName}) for the import.
+`
+
 export const invalidProjectFileMessage = `\
 The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
 `
@@ -185,7 +189,7 @@ export const noActionRequiredMessage = `\
 `
 
 export const migrationPerformedMessage = `\
- ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes: 
+ ${chalk.green(figures.tick)} Your schema was successfully updated. Here are the changes:
 `
 
 export const migrationErrorMessage = `\
@@ -194,7 +198,7 @@ There are issues with the new schema:
 `
 
 export const potentialDataLossMessage = `\
-Your changes might result in data loss. 
+Your changes might result in data loss.
 Review your changes with ${chalk.cyan(`\`graphcool status\``)} or use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 `
 
@@ -220,7 +224,7 @@ An error occured while trying to fetch your projects.
 
 export const endpointsMessage = (projectId: string) => `\
  The endpoints for your project are:
- 
+
    Simple API:         https://api.graph.cool/simple/v1/${projectId}
    Relay API:          https://api.graph.cool/relay/v1/${projectId}
    Subscriptions API:  wss://subscriptions.graph.cool/v1/${projectId}
@@ -245,7 +249,7 @@ Please provide a valid project ID.
 `
 
 export const wroteProjectFileMessage = (projectFile: string) => `\
- ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed. 
+ ${chalk.green(figures.tick)} Your project file (${chalk.bold(projectFile)}) was successfully updated. Reload it in your editor if needed.
 `
 
 export const pulledInitialProjectFileMessage = (projectFile: string) => `\
@@ -257,7 +261,7 @@ The new schema version is ${chalk.bold(newVersion)}.
 `
 
 export const differentProjectIdWarningMessage = (inputProjectId: string, readProjectId: string) => `\
-The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}). 
+The project ID you provided (${inputProjectId}) is different than the one in the current project file (${readProjectId}).
 This will override the current project file with a different project, do you still want to continue? [y|N]
 `
 
@@ -310,11 +314,11 @@ Cloning your project ...`
 
 export const clonedProjectMessage = (clonedProjectName: string, outputPath: string, projectId: string) => `\
  ${chalk.green(figures.tick)} Cloned your project as ${chalk.bold(clonedProjectName)}. The project file was written to ${chalk.bold(outputPath)}.
- 
-   Here are your endpoints: 
-   
+
+   Here are your endpoints:
+
         Simple API:   https://api.graph.cool/simple/v1/${projectId}
-        Relay API:    https://api.graph.cool/relay/v1/${projectId}  
+        Relay API:    https://api.graph.cool/relay/v1/${projectId}
 `
 
 
@@ -344,12 +348,12 @@ Found ${projectFiles.length} project files. You can specify the one you for whic
 `
 
 export const localSchemaBehindRemoteMessage = (remoteVersion: string, localVersion: string) => `\
-The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}). 
+The local version of your schema (${localVersion}) is behind the remote version (${remoteVersion}).
 Save your local changes and execute ${chalk.cyan(`\`graphcool pull\``)} before a schema migration.
 `
 
 export const remoteSchemaBehindLocalMessage = (remoteVersion: string, localVersion: string) => `\
-The remote version (${remoteVersion}) is behind the local version (${localVersion}). Please don't make manual changes to the project file's header. 
+The remote version (${remoteVersion}) is behind the local version (${localVersion}). Please don't make manual changes to the project file's header.
 `
 
 export const everythingUpToDateMessage = `\
@@ -357,7 +361,7 @@ Everything up-to-date.
 `
 
 export const potentialChangesMessage = `\
-Here are all the local changes: 
+Here are all the local changes:
 `
 
 export const usePushToUpdateMessage = `
@@ -365,13 +369,13 @@ Use ${chalk.cyan(`\`graphcool push\``)} to apply your schema changes.
 `
 
 export const issuesInSchemaMessage = `\
-The current version of your schema contains some issues: 
+The current version of your schema contains some issues:
 
 `
 
 export const destructiveChangesInStatusMessage = `\
 
-Pushing the current version of your schema can result in data loss. 
+Pushing the current version of your schema can result in data loss.
 Use ${chalk.cyan(`\`graphcool push --force\``)} if you know what you're doing!
 `
 
@@ -430,8 +434,8 @@ Could not read the project's ID from project file.
 
 export const unknownOptionsWarning = (command: string, unknownOptions: string[]) => unknownOptions.length > 1 ? `\
 ${chalk.bold('Error:')} The following options are not recognized: ${chalk.red(`${unknownOptions.map(a => a)}`)}
-Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options. 
+Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
 ` : `\
 ${chalk.bold('Error:')} The following option is not recognized: ${chalk.red(`${unknownOptions[0]}`)}
-Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options. 
+Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
 `
