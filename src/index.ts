@@ -11,6 +11,7 @@ import authCommand from './commands/auth'
 import initCommand from './commands/init'
 import interactiveInitCommand from './commands/interactiveInit'
 import exportCommand from './commands/export'
+import importCommand from './commands/import'
 import endpointsCommand from './commands/endpoints'
 import statusCommand from './commands/status'
 import quickstartCommand from './commands/quickstart'
@@ -137,6 +138,14 @@ async function main() {
 
       const projectFile = argv._[1]
       await exportCommand({projectFile}, defaultEnvironment())
+      break
+    }
+
+    case 'import': {
+      await checkAuth('auth')
+
+      const props = {}
+      await importCommand(props, defaultEnvironment())
       break
     }
 
