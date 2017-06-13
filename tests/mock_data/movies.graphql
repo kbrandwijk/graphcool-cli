@@ -1,0 +1,6 @@
+type Movie {
+  oldid: String
+  description: String
+  released: String
+  title: String
+}

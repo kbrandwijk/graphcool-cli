@@ -9,17 +9,18 @@ import {
 import {
   graphcoolConfigFilePath,
   systemAPIEndpoint,
+  simpleAPIEndpoint,
   contactUsInSlackMessage
 } from '../utils/constants'
 import 'isomorphic-fetch'
 const debug = require('debug')('graphcool')
 
 async function sendGraphQLRequest(queryString: string,
-                                  resolver: Resolver,
-                                  variables?: any): Promise<any> {
+  resolver: Resolver,
+  variables?: any): Promise<any> {
 
   const configContents = resolver.read(graphcoolConfigFilePath)
-  const {token} = JSON.parse(configContents)
+  const { token } = JSON.parse(configContents)
 
   const queryVariables = variables || {}
   const payload = {
@@ -46,11 +47,40 @@ async function sendGraphQLRequest(queryString: string,
   return json
 }
 
+async function sendProjectGraphQLRequest(projectId: string, queryString: string, variables?: any): Promise<any> {
+    const queryVariables = variables || {}
+    const payload = {
+      query: queryString,
+      variables: queryVariables
+    }
+
+    const simpleAPI = simpleAPIEndpoint + projectId
+
+    console.log(`Send request to ${simpleAPI}\nPayload: \n${JSON.stringify(payload)}`)
+
+    const result = await fetch(simpleAPI, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload),
+    })
+    const json = await result.json()
+
+    console.log(`Received JSON response: \n${JSON.stringify(json)}`)
+
+    if (process.env.DEBUG === 'graphcool') {
+      debug(`Received JSON response: \n${JSON.stringify(json)}`)
+    }
+
+    return json
+}
+
 export async function createProject(name: string,
-                                    schema: string,
-                                    resolver: Resolver,
-                                    alias?: string,
-                                    region?: string): Promise<ProjectInfo> {
+  schema: string,
+  resolver: Resolver,
+  alias?: string,
+  region?: string): Promise<ProjectInfo> {
 
   const mutation = `\
 mutation addProject($schema: String!, $name: String!, $alias: String, $region: Region) {
@@ -72,12 +102,12 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
 }
 `
 
-  let variables: any = {name, schema}
+  let variables: any = { name, schema }
   if (alias) {
-    variables = {...variables, alias}
+    variables = { ...variables, alias }
   }
   if (region) {
-    variables = {...variables, region}
+    variables = { ...variables, region }
   }
 
   const json = await sendGraphQLRequest(mutation, resolver, variables)
@@ -92,14 +122,14 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   const returnedAlias = json.data.addProject.project.alias
   name = json.data.addProject.project.name
 
-  const projectInfo = {projectId, version, alias: returnedAlias, schema, name}
+  const projectInfo = { projectId, version, alias: returnedAlias, schema, name }
 
   return projectInfo
 }
 
 export async function pushNewSchema(newSchema: string,
-                                    force: boolean,
-                                    resolver: Resolver): Promise<MigrationResult> {
+  force: boolean,
+  resolver: Resolver): Promise<MigrationResult> {
 
   const mutation = `\
  mutation($newSchema: String!, $force: Boolean!) {
@@ -151,7 +181,7 @@ export async function pushNewSchema(newSchema: string,
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
   const newVersion = json.data.migrateProject.project.version
   newSchema = json.data.migrateProject.project.schema
-  const migrationResult = {messages, errors, newVersion, newSchema} as MigrationResult
+  const migrationResult = { messages, errors, newVersion, newSchema } as MigrationResult
 
   return migrationResult
 }
@@ -205,7 +235,7 @@ mutation($newSchema: String!) {
   const errors = json.data.migrateProject.errors as [MigrationErrorMessage]
   const newVersion = json.data.migrateProject.project.version
   newSchema = json.data.migrateProject.project.schema
-  const migrationResult = {messages, errors, newVersion, newSchema} as MigrationResult
+  const migrationResult = { messages, errors, newVersion, newSchema } as MigrationResult
 
   return migrationResult
 }
@@ -260,7 +290,7 @@ query ($projectId: ID!){
   }
 }`
 
-  const variables = {projectId}
+  const variables = { projectId }
 
   const json = await sendGraphQLRequest(query, resolver, variables)
 
@@ -372,6 +402,11 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
   }
 
   return projectInfo
+}
+
+export async function sendProjectMutation(projectId: string, mutation: string): Promise<any> {
+  const json = await sendProjectGraphQLRequest(projectId, mutation, {});
+  return json;
 }
 
 export function parseErrors(response: any): APIError[] {

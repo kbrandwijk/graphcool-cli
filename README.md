@@ -37,7 +37,7 @@ npm install -g graphcool
 ```sh
 
   Serverless GraphQL backend for frontend developers (https://www.graph.cool)
-  
+
   Usage: graphcool [command]
 
   Commands:
@@ -45,26 +45,31 @@ npm install -g graphcool
     push          Push project file changes
     pull          Download the latest project file
     export        Export project data
+    import        Import project data
     endpoints     Print GraphQL endpoints
     console       Open Graphcool Console
     playground    Open GraphQL Playground
     projects      List projects
     auth          Sign up or login
     version       Print version
-    
+
   Run 'graphcool COMMAND --help' for more information on a command.
-  
+
   Examples:
-  
+
   - Initialize a new Graphcool project
     $ graphcool init
-  
+
   - Local setup of an existing project
     $ graphcool pull -p <project-id | alias>
-    
+
   - Update live project with local changes
     $ graphcool push
-    
+
+  - Import project data from json file
+    $ graphcool init --schema ./tests/mock_data/movies.graphql
+    $ graphcool import ./tests/mock_data/movies.json --batch 20
+
 ```
 
 ## Resources

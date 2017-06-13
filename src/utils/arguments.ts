@@ -8,6 +8,7 @@ import {
   usageVersion,
   usageConsole,
   usageExport,
+  usageImport,
   usageEndpoints,
   usagePlayground,
   usageStatus,
@@ -28,7 +29,7 @@ export function optionsForCommand(command: Command): string[] {
     case 'auth':
       return ['token', 't']
     case 'import':
-      return ['data', 'd']
+      return ['batch', 'b', 'type', 't']
   }
   return []
 }
@@ -43,6 +44,7 @@ export function usageForCommand(command: Command): string {
     case 'version': return usageVersion
     case 'console': return usageConsole
     case 'export': return usageExport
+    case 'import': return usageImport
     case 'endpoints': return usageEndpoints
     case 'playground': return usagePlayground
     case 'status': return usageStatus

@@ -8,6 +8,7 @@ import figures = require('figures')
  */
 export const authUIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.console.graph.cool/cli/auth' : 'https://console.graph.cool/cli/auth'
 export const systemAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/system' : 'https://api.graph.cool/system'
+export const simpleAPIEndpoint = process.env.ENV === 'DEV' ? 'https://dev.api.graph.cool/simple/v1/' : 'https://api.graph.cool/simple/v1/'
 export const authEndpoint = process.env.ENV === 'DEV' ? 'https://cli-auth-api.graph.cool/dev' : 'https://cli-auth-api.graph.cool/prod'
 export const docsEndpoint = process.env.ENV === 'DEV' ? 'https://dev.graph.cool/docs' : 'https://www.graph.cool/docs'
 export const consoleURL = (token: string, projectName?: string) =>
@@ -174,6 +175,14 @@ Please provide a valid project file (${graphcoolProjectFileName}) for the schema
 
 export const noProjectFileForImportMessage = `\
 Please provide a valid project file (${graphcoolProjectFileName}) for the import.
+`
+
+export const noDataForImportMessage = `\
+Please provide a valid data file for the import using --data.
+`
+
+export const noTypeSpecifiedForImportMessage = `\
+Please provide a valid type for the import using --type.
 `
 
 export const invalidProjectFileMessage = `\

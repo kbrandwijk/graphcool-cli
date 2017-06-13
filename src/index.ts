@@ -144,9 +144,10 @@ async function main() {
     case 'import': {
       await checkAuth('auth')
 
-      const dataPath = argv['data'] || argv['d']
-      const projectFile = argv._[1]
-      const props = {projectFile, dataPath}
+      const batchSize = argv['batch'] || argv['b']
+      const gqType = argv['type'] || argv['t']
+      const dataPath = argv._[1]
+      const props = {dataPath, batchSize, gqType}
       await importCommand(props, defaultEnvironment())
       break
     }
