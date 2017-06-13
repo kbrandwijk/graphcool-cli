@@ -1,4 +1,6 @@
 import TestOut from './system/TestOut'
+import { Readable } from 'stream'
+
 export type Command =
     'auth'
     | 'push'
@@ -24,6 +26,7 @@ export interface GraphcoolConfig {
 }
 
 export interface Resolver {
+  readStream(path: string): Readable
   read(path: string): string
   write(path: string, value: string)
   delete(path: string)

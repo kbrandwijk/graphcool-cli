@@ -12,6 +12,7 @@ import {
   readProjectInfoFromProjectFile,
   isValidProjectFilePath
 } from '../utils/file'
+import * as oboe from 'oboe'
 
 interface Props {
   projectFile?: string
@@ -21,7 +22,7 @@ interface Props {
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   console.log('Start importCommand')
 
-  const {resolver, out} = env
+  const { resolver, out } = env
   const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
@@ -29,8 +30,21 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(invalidProjectFileMessage)
   }
 
-  console.log(projectInfo.schema)
-
+  // Read data file
+  if (props.dataPath) {
+    oboe(resolver.readStream(props.dataPath))
+      .on('node', {
+        '*': function(scheme) {
+          console.log('Aha! ' + scheme);
+        }
+      })
+      .on('done', function() {
+        console.log("*twiddles mustache*");
+      })
+      .on('fail', function() {
+        console.log("Drat! Foiled again!");
+      })
+  }
 }
 
 function getProjectFilePath(props: Props, resolver: Resolver): string {

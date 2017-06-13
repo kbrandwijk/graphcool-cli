@@ -144,8 +144,9 @@ async function main() {
     case 'import': {
       await checkAuth('auth')
 
+      const dataPath = argv['data'] || argv['d']
       const projectFile = argv._[1]
-      const props = {projectFile}
+      const props = {projectFile, dataPath}
       await importCommand(props, defaultEnvironment())
       break
     }

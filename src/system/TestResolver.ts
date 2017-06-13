@@ -1,5 +1,6 @@
 import {Resolver} from '../types'
 import {projectFileSuffix, schemaFileSuffix} from '../utils/constants'
+import { Readable } from 'stream'
 
 export default class TestResolver implements Resolver {
 
@@ -7,6 +8,23 @@ export default class TestResolver implements Resolver {
 
   constructor(storage: { [key: string] : string }) {
     this.storage = storage
+  }
+
+  readStream(path: string): Readable {
+    var stream = new Readable();
+    // absolute path
+    if (path.startsWith('/')) {
+      stream.push(this.storage[path])
+    }
+
+    // prepend ./ if necessary
+    else if (!path.startsWith('./')) {
+      path = `./${path}`
+      stream.push(this.storage[path])
+    }
+
+    stream.push(null)
+    return stream
   }
 
   read(path: string): string {
@@ -75,4 +93,3 @@ export default class TestResolver implements Resolver {
   }
 
 }
-

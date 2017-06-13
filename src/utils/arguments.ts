@@ -27,6 +27,8 @@ export function optionsForCommand(command: Command): string[] {
       return ['project', 'p', 'output', 'o', 'force', 'f']
     case 'auth':
       return ['token', 't']
+    case 'import':
+      return ['data', 'd']
   }
   return []
 }
