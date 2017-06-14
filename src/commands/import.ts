@@ -6,13 +6,11 @@ import {
   invalidProjectFileMessage,
   noDataForImportMessage,
   noTypeSpecifiedForImportMessage,
-  invalidProjectFilePathMessage,
   multipleProjectFilesMessage,
   noProjectFileForImportMessage
 } from '../utils/constants'
 import {
   readProjectInfoFromProjectFile,
-  isValidProjectFilePath
 } from '../utils/file'
 import {
   sendProjectMutation
@@ -22,13 +20,11 @@ import * as oboe from 'oboe'
 interface Props {
   dataPath?: string
   batchSize?: number
-  gqType?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
-  console.log('Start importCommand')
 
-  const { resolver, out } = env
+  const {resolver} = env
   const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
@@ -40,74 +36,74 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(noDataForImportMessage)
   }
 
-  if (!props.gqType) {
-    throw new Error(noTypeSpecifiedForImportMessage)
-  }
-
   // Set default batch size if not specified
   const batchSize = props.batchSize || 10
 
   // Define building blocks for batch mutation
-  const mutationStartElement = "mutation { "
-  const startElement = `create${props.gqType} ( `
-  var objectElement = ""
-  const endElement = ") { id } "
-  const mutationEndElement = "}"
+  const mutationStartElement = 'mutation { '
+  let objectElement = ''
+  const endElement = ') { id } '
+  const mutationEndElement = '}'
 
-  var mutation = ""
-  var sent = false
+  let mutation = ''
+  let sent = false
 
   // Stream read data file
-  oboe(resolver.readStream(props.dataPath))
-    .on('node', {
-      '*': function(scheme, path) {
+  await new Promise((resolve, reject) => {
+    oboe(resolver.readStream(props.dataPath!))
+      .on('node', {
+        '*': async (scheme, path) => {
 
-        // Current mutation has not been sent
-        sent = false
+          // NOTE: This is WIP and won't work yet
+          const typeName = path[0] as string
+          const startElement = `create${typeName} ( `
 
-        // Element of current object
-        if (path.length == 3) {
-          // Add element to mutation
-          objectElement += `${path[2]}: ${JSON.stringify(scheme)},`
-        }
+          // Current mutation has not been sent
+          sent = false
 
-        // End of object
-        if (path.length == 2) {
-          // Give mutation a unique name
-          const mutationName = `mut${path[1]}: `
+          // Element of current object
+          if (path.length === 3) {
+            // Add element to mutation
+            objectElement += `${path[2]}: ${JSON.stringify(scheme)},`
+          }
 
-          // Add mutation to batch
-          mutation += `${mutationName}${startElement}${objectElement.substr(0, objectElement.length - 1)}${endElement}`
+          // End of object
+          if (path.length === 2) {
+            // Give mutation a unique name
+            const mutationAlias = `mut${path[1]}: `
 
-          // Start new mutation
-          objectElement = ""
+            // Add mutation to batch
+            mutation += `${mutationAlias}${startElement}${objectElement.substr(0, objectElement.length - 1)}${endElement}`
 
-          // Send batch every n-th element
-          if (path[1] % batchSize == 0)
-          {
-            // Wrap mutations in batch
-            const fullMutation = mutationStartElement + mutation + mutationEndElement
-            sendProjectMutation(projectInfo.projectId, fullMutation)
+            // Start new mutation
+            objectElement = ''
 
-            // Start new batch
-            mutation = ""
-            sent = true;
+            // Send batch every n-th element
+            if (path[1] % batchSize == 0) {
+              // Wrap mutations in batch
+              const fullMutation = mutationStartElement + mutation + mutationEndElement
+              await sendProjectMutation(projectInfo.projectId, fullMutation)
+
+              // Start new batch
+              mutation = ''
+              sent = true
+            }
           }
         }
-      }
-    })
-    .on('done', function() {
-      if (!sent) {
-        // There are left-overs after the last batch of n
+      })
+      .on('done', async () => {
+        if (!sent) {
+          // There are left-overs after the last batch of n
 
-        const fullMutation = mutationStartElement + mutation + mutationEndElement
-        sendProjectMutation(projectInfo.projectId, fullMutation)
-      }
+          const fullMutation = mutationStartElement + mutation + mutationEndElement
+          await sendProjectMutation(projectInfo.projectId, fullMutation)
 
-    })
-    .on('fail', function() {
-      console.log("Drat! Foiled again!");
-    })
+          resolve()
+        }
+
+      })
+      .on('fail', reject)
+  })
 }
 
 function getProjectFilePath(props: Props, resolver: Resolver): string {

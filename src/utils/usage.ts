@@ -33,6 +33,11 @@ export const usageRoot = (showQuickstart: boolean) => `
   ${chalk.gray('-')} Update live project with local changes
     ${chalk.cyan('$ graphcool push')}
 
+  ${chalk.gray('-')} Import project data from JSON file
+    ${chalk.cyan('$ graphcool init --schema http://graphqlbin.com/movies-import.graphql')}
+    ${chalk.cyan('$ curl http://static.graph.cool.s3.amazonaws.com/dumps/movies.json > movies.json')}
+    ${chalk.cyan('$ graphcool import movies.json --batch 20')}
+
 `
 
 export const usageInit = `

@@ -21,7 +21,7 @@ export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
  * Sentry
  */
 // DSN: https://6ef6eea3afb041f2aca71d08742a36d1@sentry.io/178603
-export const sentryKey = '6ef6eea3afb041f2aca71d08742a36d1'
+export const sentryKey = '6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c'
 export const sentryId = '178603'
 
 /*

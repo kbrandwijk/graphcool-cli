@@ -67,8 +67,9 @@ npm install -g graphcool
     $ graphcool push
 
   - Import project data from json file
-    $ graphcool init --schema ./tests/mock_data/movies.graphql
-    $ graphcool import ./tests/mock_data/movies.json --batch 20
+    $ graphcool init --schema http://graphqlbin.com/movies-import.graphql
+    $ curl http://static.graph.cool.s3.amazonaws.com/dumps/movies.json > movies.json
+    $ graphcool import movies.json --batch 20
 
 ```
 

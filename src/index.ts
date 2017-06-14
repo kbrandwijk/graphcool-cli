@@ -31,8 +31,8 @@ import {
   usageRoot,
 } from './utils/usage'
 import {optionsForCommand, usageForCommand} from './utils/arguments'
+import Raven = require('raven')
 
-const Raven = require('raven')
 const debug = require('debug')('graphcool')
 const {version} = require('../../package.json')
 
