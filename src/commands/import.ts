@@ -30,7 +30,10 @@ interface Props {
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
+  // TODO: Reorder variable initialization, rename/move, coding standards etc.
+
   const { resolver } = env
+
   const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
@@ -42,20 +45,18 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(noDataForImportMessage)
   }
 
-  let progress = new ProgressBar('importing [:bar] :percent :etas', {
+  const progress = new ProgressBar('importing [:bar] :percent :etas', {
       complete: '=',
       incomplete: ' ',
       width: 50,
-      total: fs.statSync(props.dataPath!).size
+      total: fs.statSync(props.dataPath!).size // TODO: Move fs to resolver
     });
-
-  //var progress = new ProgressBar(':bar', { total: fs.statSync(props.dataPath!).size });
-
 
   const batchSize = props.batchSize || 25
 
   const batchMutationTemplate = data => `mutation { ${data.map(mutation => `${mutation}`).join(' ')} }`
 
+  // TODO: Now hardcoded to movie, because of issue reading type name from data file
   const mutationTemplate = (index, data) => `mut${index}: createMovie( ${data.map(field => `${field[0]}: \"${field[1]}\"`).join(', ')}) { id }`;
 
   const toBatchMutation = () => {
@@ -68,13 +69,13 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
         cb(null, null)
       }
       else {
-        let result = batchMutationTemplate(batch)
+        const result = batchMutationTemplate(batch)
         i = 0
         batch = []
         cb(null, result)
       }
     }, function(cb) {
-      let result = batchMutationTemplate(batch)
+      const result = batchMutationTemplate(batch)
       i = 0
       batch = []
       this.push(result);
@@ -86,7 +87,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   let mutationCount = 0;
   const toMutation = () => {
     return through2.obj((data, enc, cb) => {
-      let result = mutationTemplate(mutationCount, data)
+      const result = mutationTemplate(mutationCount, data)
       mutationCount++
       cb(null, result)
     })
@@ -98,7 +99,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       if (rateMeter.bytes - bytesprocessed > 0) progress.tick(rateMeter.bytes - bytesprocessed)
       bytesprocessed = rateMeter.bytes;
 
-      let out = Object.keys(data).map(d => [d, data[d]]);
+      const out = Object.keys(data).map(d => [d, data[d]]);
       cb(null, out)
     })
   }
