@@ -56,7 +56,7 @@ async function sendProjectGraphQLRequest(projectId: string, queryString: string,
 
     const simpleAPI = simpleAPIEndpoint + projectId
 
-    console.log(`Send request to ${simpleAPI}\nPayload: \n${JSON.stringify(payload)}`)
+    //console.log(`Send request to ${simpleAPI}\nPayload: \n${JSON.stringify(payload)}`)
 
     const result = await fetch(simpleAPI, {
       method: 'POST',
@@ -67,7 +67,7 @@ async function sendProjectGraphQLRequest(projectId: string, queryString: string,
     })
     const json = await result.json()
 
-    console.log(`Received JSON response: \n${JSON.stringify(json)}`)
+    //console.log(`Received JSON response: \n${JSON.stringify(json)}`)
 
     if (process.env.DEBUG === 'graphcool') {
       debug(`Received JSON response: \n${JSON.stringify(json)}`)

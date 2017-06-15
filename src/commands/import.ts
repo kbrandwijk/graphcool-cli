@@ -15,7 +15,13 @@ import {
 import {
   sendProjectMutation
 } from '../api/api'
-import * as oboe from 'oboe'
+
+import * as JSONStream from 'JSONStream'
+import * as through2 from 'through2'
+import * as through2concurrent from 'through2-concurrent'
+import * as fs from 'fs'
+import * as _progress from 'cli-progress'
+import * as meter from 'stream-meter'
 
 interface Props {
   dataPath?: string
@@ -24,7 +30,7 @@ interface Props {
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
 
-  const {resolver} = env
+  const { resolver } = env
   const projectFilePath = getProjectFilePath(props, resolver)
 
   const projectInfo = readProjectInfoFromProjectFile(resolver, projectFilePath)
@@ -36,74 +42,93 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(noDataForImportMessage)
   }
 
-  // Set default batch size if not specified
-  const batchSize = props.batchSize || 10
+  let progress = new _progress.Bar({}, _progress.Presets.shades_classic);
 
-  // Define building blocks for batch mutation
-  const mutationStartElement = 'mutation { '
-  let objectElement = ''
-  const endElement = ') { id } '
-  const mutationEndElement = '}'
+  console.log('size', fs.statSync(props.dataPath!).size)
+  progress.start(fs.statSync(props.dataPath!).size, 0)
 
-  let mutation = ''
-  let sent = false
+  const batchSize = props.batchSize || 25
 
-  // Stream read data file
-  await new Promise((resolve, reject) => {
-    oboe(resolver.readStream(props.dataPath!))
-      .on('node', {
-        '*': async (scheme, path) => {
+  const batchMutationTemplate = data => `mutation { ${data.map(mutation => `${mutation}`).join(' ')} }`
 
-          // NOTE: This is WIP and won't work yet
-          const typeName = path[0] as string
-          const startElement = `create${typeName} ( `
+  const mutationTemplate = (index, data) => `mut${index}: createMovie( ${data.map(field => `${field[0]}: \"${field[1]}\"`).join(', ')}) { id }`;
 
-          // Current mutation has not been sent
-          sent = false
+  const toBatchMutation = () => {
+    let i = 0;
+    let batch: any = [];
 
-          // Element of current object
-          if (path.length === 3) {
-            // Add element to mutation
-            objectElement += `${path[2]}: ${JSON.stringify(scheme)},`
-          }
+    return through2.obj((data, enc, cb) => {
+      if (i++ < batchSize) {
+        batch.push(data)
+        cb(null, null)
+      }
+      else {
+        let result = batchMutationTemplate(batch)
+        i = 0
+        batch = []
+        cb(null, result)
+      }
+    }, function(cb) {
+      let result = batchMutationTemplate(batch)
+      i = 0
+      batch = []
+      this.push(result);
+      cb()
+    }
+    )
+  }
 
-          // End of object
-          if (path.length === 2) {
-            // Give mutation a unique name
-            const mutationAlias = `mut${path[1]}: `
+  const toMutation = () => {
+    let j = 0;
+    return through2.obj((data, enc, cb) => {
+      let result = mutationTemplate(j, data)
+      j++
+      cb(null, result)
+    })
+  }
 
-            // Add mutation to batch
-            mutation += `${mutationAlias}${startElement}${objectElement.substr(0, objectElement.length - 1)}${endElement}`
+  const toFieldArray = () => {
+    return through2.obj((data, enc, cb) => {
+      progress.update(m.bytes)
+      let out = Object.keys(data).map(d => [d, data[d]]);
+      cb(null, out)
+    })
+  }
 
-            // Start new mutation
-            objectElement = ''
+  const toConsole = () => {
+    let count = 0;
+    return through2.obj(function(data, enc, cb) {
+      count++;
+      cb(null, null);
+    }, function(cb) {
+      console.log('count', count)
+      this.push(count);
+      cb();
+    });
+  };
 
-            // Send batch every n-th element
-            if (path[1] % batchSize == 0) {
-              // Wrap mutations in batch
-              const fullMutation = mutationStartElement + mutation + mutationEndElement
-              await sendProjectMutation(projectInfo.projectId, fullMutation)
+  const toApi = () => {
+    return through2concurrent.obj({ maxConcurrency: 8 }, function(data, enc, cb) {
+      var self = this;
+      sendProjectMutation(projectInfo.projectId, data).then(function(newChunk) {
+        self.push(newChunk);
+        cb();
+      });
+    })
+  };
 
-              // Start new batch
-              mutation = ''
-              sent = true
-            }
-          }
-        }
-      })
-      .on('done', async () => {
-        if (!sent) {
-          // There are left-overs after the last batch of n
+  let m = meter()
 
-          const fullMutation = mutationStartElement + mutation + mutationEndElement
-          await sendProjectMutation(projectInfo.projectId, fullMutation)
+  resolver.readStream(props.dataPath!)
+    .pipe(m)
+    .pipe(JSONStream.parse('*.*'))
+    .pipe(toFieldArray())
+    .pipe(toMutation())
+    .pipe(toBatchMutation())
+    .pipe(toApi())
+    .pipe(toConsole())
 
-          resolve()
-        }
 
-      })
-      .on('fail', reject)
-  })
 }
 
 function getProjectFilePath(props: Props, resolver: Resolver): string {
