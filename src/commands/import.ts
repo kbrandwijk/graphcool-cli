@@ -117,12 +117,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   };
 
   const toApi = () => {
-    return through2concurrent.obj({ maxConcurrency: 8 }, function(data, enc, cb) {
-      var self = this;
-      sendProjectMutation(projectInfo.projectId, data).then(function(newChunk) {
-        self.push(newChunk);
-        cb();
-      });
+    return through2concurrent.obj({ maxConcurrency: 8 }, async function(data, enc, cb) {
+      const newChunk = await sendProjectMutation(projectInfo.projectId, data);
+      this.push(newChunk);
+      cb();
     })
   };
 
