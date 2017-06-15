@@ -20,7 +20,7 @@ import * as JSONStream from 'JSONStream'
 import * as through2 from 'through2'
 import * as through2concurrent from 'through2-concurrent'
 import * as fs from 'fs'
-import * as _progress from 'cli-progress'
+import * as ProgressBar from 'progress'
 import * as meter from 'stream-meter'
 
 interface Props {
@@ -42,10 +42,15 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(noDataForImportMessage)
   }
 
-  let progress = new _progress.Bar({}, _progress.Presets.shades_classic);
+  let progress = new ProgressBar('importing [:bar] :percent :etas', {
+      complete: '=',
+      incomplete: ' ',
+      width: 50,
+      total: fs.statSync(props.dataPath!).size
+    });
 
-  console.log('size', fs.statSync(props.dataPath!).size)
-  progress.start(fs.statSync(props.dataPath!).size, 0)
+  //var progress = new ProgressBar(':bar', { total: fs.statSync(props.dataPath!).size });
+
 
   const batchSize = props.batchSize || 25
 
@@ -78,18 +83,21 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     )
   }
 
+  let mutationCount = 0;
   const toMutation = () => {
-    let j = 0;
     return through2.obj((data, enc, cb) => {
-      let result = mutationTemplate(j, data)
-      j++
+      let result = mutationTemplate(mutationCount, data)
+      mutationCount++
       cb(null, result)
     })
   }
 
   const toFieldArray = () => {
+    let bytesprocessed = 0;
     return through2.obj((data, enc, cb) => {
-      progress.update(m.bytes)
+      if (rateMeter.bytes - bytesprocessed > 0) progress.tick(rateMeter.bytes - bytesprocessed)
+      bytesprocessed = rateMeter.bytes;
+
       let out = Object.keys(data).map(d => [d, data[d]]);
       cb(null, out)
     })
@@ -101,7 +109,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
       count++;
       cb(null, null);
     }, function(cb) {
-      console.log('count', count)
+      console.log(`Import done. Imported ${mutationCount} records`)
       this.push(count);
       cb();
     });
@@ -117,10 +125,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     })
   };
 
-  let m = meter()
+  let rateMeter = meter()
 
   resolver.readStream(props.dataPath!)
-    .pipe(m)
+    .pipe(rateMeter)
     .pipe(JSONStream.parse('*.*'))
     .pipe(toFieldArray())
     .pipe(toMutation())
