@@ -20,9 +20,7 @@ export const sampleSchemaURL = `http://graphqlbin.com/empty.graphql`
 /*
  * Sentry
  */
-// DSN: https://6ef6eea3afb041f2aca71d08742a36d1@sentry.io/178603
-export const sentryKey = '6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c'
-export const sentryId = '178603'
+export const sentryDSN = 'https://6ef6eea3afb041f2aca71d08742a36d1:51bdc5643a7648ffbfb3d3017879467c@sentry.io/178603'
 
 /*
  * File paths / names
@@ -118,13 +116,13 @@ export const authenticationSuccessMessage = (email: string) => ` ${chalk.green(f
  * Terminal output: create
  */
 export const creatingProjectMessage = (name: string) => `Creating project ${chalk.bold(name)}...`
-export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string) => `\
+export const createdProjectMessage = (name: string, projectId: string, projectFileContent: string, projectOutputPath?: string) => `\
  ${chalk.green(figures.tick)} Created project ${chalk.bold(name)} (ID: ${projectId}) successfully.
 
 
    ${chalk.bold('Here is what you can do next:')}
 
-   1) Open ${chalk.bold('project.graphcool')} in your editor to update your schema.
+   1) Open ${chalk.bold(projectOutputPath || 'project.graphcool')} in your editor to update your schema.
       You can push your changes using ${chalk.cyan('`graphcool push`')}.
 
    2) Use one of the following endpoints to connect to your GraphQL API:
@@ -446,5 +444,9 @@ ${chalk.bold('Error:')} The following options are not recognized: ${chalk.red(`$
 Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
 ` : `\
 ${chalk.bold('Error:')} The following option is not recognized: ${chalk.red(`${unknownOptions[0]}`)}
+<<<<<<< HEAD
 Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
+=======
+Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
+>>>>>>> master
 `

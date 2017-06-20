@@ -9,6 +9,8 @@ import * as ProgressBar from 'progress'
 import * as through2 from 'through2'
 import * as through2concurrent from 'through2-concurrent'
 
+import * as jsonImporter from '../../system/importers/json'
+
 interface Props {
   progressBar: ProgressBar
   projectId: string
@@ -34,11 +36,7 @@ export class defaultImport {
     this.streamMeter = meter()
   }
 
-  private toJSON = () => {
-    return JSONStream.parse('*.*')
-  }
-
-  private toFieldArray = () => {
+  private showMeter = () => {
     const _self = this;
     let bytesprocessed = 0;
     return through2.obj((data, enc, cb) => {
@@ -46,7 +44,12 @@ export class defaultImport {
         _self.props.progressBar.tick(_self.streamMeter.bytes - bytesprocessed)
       }
       bytesprocessed = _self.streamMeter.bytes
+      cb(null, data)
+    })
+  }
 
+  private toFieldArray = () => {
+    return through2.obj((data, enc, cb) => {
       const out = Object.keys(data).map(d => [d, data[d]])
       cb(null, out)
     })
@@ -111,9 +114,10 @@ export class defaultImport {
   };
 
   doImport = () => {
-    this.resolver.readStream(this.props.dataPath!)
+    var chain = this.resolver.readStream(this.props.dataPath!)
       .pipe(this.streamMeter)
-      .pipe(this.toJSON())
+      .pipe(this.showMeter())      
+      .pipe(jsonImporter.transforms[0]())
       .pipe(this.toFieldArray())
       .pipe(this.toMutation())
       .pipe(this.toBatchMutation())
