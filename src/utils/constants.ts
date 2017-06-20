@@ -444,9 +444,8 @@ ${chalk.bold('Error:')} The following options are not recognized: ${chalk.red(`$
 Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
 ` : `\
 ${chalk.bold('Error:')} The following option is not recognized: ${chalk.red(`${unknownOptions[0]}`)}
-<<<<<<< HEAD
 Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
 =======
 Use ${chalk.cyan(`\`graphcool ${command} help\``)} to see a list of all possible options.
->>>>>>> master
+>>>>>>> origin
 `
