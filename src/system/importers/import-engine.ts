@@ -43,7 +43,6 @@ export class ImportEngine {
 
   constructor(props: Props, env: SystemEnvironment) {
     this.props = props
-    console.log(props);
     this.resolver = env.resolver
     this.progressBar.total = fs.statSync(this.props.dataPath!).size // TODO: Move fs to resolver
     this.props.batchSize = this.props.batchSize || 25

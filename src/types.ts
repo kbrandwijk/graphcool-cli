@@ -1,4 +1,6 @@
 import {Config} from './utils/config'
+import { Readable } from 'stream'
+
 export type Command =
     'auth'
     | 'push'

@@ -142,7 +142,7 @@ async function main() {
     }
 
     case 'import': {
-      await checkAuth('auth')
+      await checkAuth(env, 'auth')
 
       const batchSize = argv['batch'] || argv['b']
       const dataPath = argv._[1]

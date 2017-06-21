@@ -1,4 +1,5 @@
 import {Resolver} from '../../src/types'
+import { Readable } from 'stream'
 import {projectFileSuffix, schemaFileSuffix} from '../../src/utils/constants'
 
 export default class TestResolver implements Resolver {
