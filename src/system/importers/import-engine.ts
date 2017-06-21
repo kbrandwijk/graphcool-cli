@@ -8,32 +8,46 @@ import * as meter from 'stream-meter'
 import * as ProgressBar from 'progress'
 import * as through2 from 'through2'
 import * as through2concurrent from 'through2-concurrent'
+import * as fs from 'fs'
+import * as lazypipe from 'lazypipe'
 
-import * as jsonImporter from '../../system/importers/json'
+import * as jsonImporter from './jsonImporter'
 
 interface Props {
-  progressBar: ProgressBar
   projectId: string
   dataPath: string
+  batchSize?: number
 }
 
-export class defaultImport {
+export class ImportEngine {
 
-  props: Props
-  batchSize: number = 25
-  batchMutationTemplate = data => `mutation { ${data.map(mutation => `${mutation}`).join(' ')} }`
-
-  resolver: Resolver
-
-  streamMeter:meter
+  private props: Props
 
   // TODO: Now hardcoded to movie, because of issue reading type name from data file
-  mutationTemplate = (index, data) => `mut${index}: createMovie( ${data.map(field => `${field[0]}: \"${field[1]}\"`).join(', ')}) { id }`
+  private mutationTemplate = (index, data) => `mut${index}: createMovie( ${data.map(field => `${field[0]}: \"${field[1]}\"`).join(', ')}) { id }`
+
+  private batchMutationTemplate = data => `mutation { ${data.map(mutation => `${mutation}`).join(' ')} }`
+
+  private resolver: Resolver
+
+  private streamMeter:meter = meter()
+
+  private progressBar:ProgressBar = new ProgressBar('importing [:bar] :percent :etas', {
+      complete: '=',
+      incomplete: ' ',
+      width: 50,
+      total: 0
+    })
+
+  private importer:any
 
   constructor(props: Props, env: SystemEnvironment) {
     this.props = props
+    console.log(props);
     this.resolver = env.resolver
-    this.streamMeter = meter()
+    this.progressBar.total = fs.statSync(this.props.dataPath!).size // TODO: Move fs to resolver
+    this.props.batchSize = this.props.batchSize || 25
+    this.importer = jsonImporter
   }
 
   private showMeter = () => {
@@ -41,7 +55,7 @@ export class defaultImport {
     let bytesprocessed = 0;
     return through2.obj((data, enc, cb) => {
       if (_self.streamMeter.bytes - bytesprocessed > 0) {
-        _self.props.progressBar.tick(_self.streamMeter.bytes - bytesprocessed)
+        _self.progressBar.tick(_self.streamMeter.bytes - bytesprocessed)
       }
       bytesprocessed = _self.streamMeter.bytes
       cb(null, data)
@@ -59,7 +73,9 @@ export class defaultImport {
   private toMutation = () => {
     const _self = this;
     return through2.obj((data, enc, cb) => {
+      //console.log('data', data)
       const result = _self.mutationTemplate(_self.mutationCount, data)
+      //console.log('result', result)
       _self.mutationCount++
       cb(null, result)
     })
@@ -71,7 +87,7 @@ export class defaultImport {
     let batch: any = []
 
     return through2.obj((data, enc, cb) => {
-      if (i++ < _self.batchSize) {
+      if (i++ < _self.props.batchSize!) {
         batch.push(data)
         cb(null, null)
       }
@@ -91,15 +107,16 @@ export class defaultImport {
     )
   }
 
+  start:number
+
   private toConsole = () => {
     const _self = this;
-    let count = 0;
+
     return through2.obj(function(data, enc, cb) {
-      count++;
       cb(null, null);
     }, function(cb) {
-      console.log(`Import done. Imported ${_self.mutationCount} records`)
-      this.push(count)
+      let end = Date.now();
+      console.log(`Import done. Imported ${_self.mutationCount} records in ${end - _self.start}ms`)
       cb()
     });
   };
@@ -113,15 +130,27 @@ export class defaultImport {
     })
   };
 
+  private getStreamMeter = () => this.streamMeter
+
+  private getFileStream = () => this.resolver.readStream(this.props.dataPath!)
+
   doImport = () => {
-    var chain = this.resolver.readStream(this.props.dataPath!)
-      .pipe(this.streamMeter)
-      .pipe(this.showMeter())      
-      .pipe(jsonImporter.transforms[0]())
-      .pipe(this.toFieldArray())
-      .pipe(this.toMutation())
-      .pipe(this.toBatchMutation())
-      .pipe(this.toApi())
-      .pipe(this.toConsole())
+
+    this.start = Date.now()
+
+    let chain = lazypipe()
+      .pipe(this.importer.reader || this.getFileStream)
+      .pipe(this.getStreamMeter)
+      .pipe(this.showMeter)
+
+    this.importer.transforms.forEach((element:any) => {
+      chain = chain.pipe(element)
+    })
+
+    chain.pipe(this.toFieldArray)
+      .pipe(this.toMutation)
+      .pipe(this.toBatchMutation)
+      .pipe(this.toApi)
+      .pipe(this.toConsole)()
   }
 }

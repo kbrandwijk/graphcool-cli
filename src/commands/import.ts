@@ -14,8 +14,8 @@ import {
 } from '../utils/file'
 
 import {
-  defaultImport
-} from '../system/importers/default-import'
+  ImportEngine
+} from '../system/importers/import-engine'
 
 
 import * as fs from 'fs'
@@ -44,19 +44,10 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     throw new Error(noDataForImportMessage)
   }
 
-  const progress = new ProgressBar('importing [:bar] :percent :etas', {
-      complete: '=',
-      incomplete: ' ',
-      width: 50,
-      total: fs.statSync(props.dataPath!).size // TODO: Move fs to resolver
-    })
-
-  const importer = new defaultImport({
-    progressBar: progress,
+  const importer = new ImportEngine({
     projectId: projectInfo.projectId,
-    dataPath: props.dataPath}, env)
-
-  importer.batchSize = props.batchSize || 25
+    dataPath: props.dataPath,
+    batchSize: props.batchSize}, env)
 
   importer.doImport()
 }

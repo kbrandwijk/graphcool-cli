@@ -6,3 +6,5 @@ dist
 *.graphcool
 *.out
 .vs
+package-lock.json
+.lock
