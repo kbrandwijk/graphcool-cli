@@ -1,6 +1,4 @@
-import TestOut from './system/TestOut'
-import { Readable } from 'stream'
-
+import {Config} from './utils/config'
 export type Command =
     'auth'
     | 'push'
@@ -22,8 +20,9 @@ export type Command =
 export type Region = 'eu-west-1'
 
 export interface GraphcoolConfig {
-  token: string
+  token?: string
 }
+export type GraphcoolConfigOptionName = 'token'
 
 export interface Resolver {
   readStream(path: string): Readable
@@ -88,11 +87,7 @@ export interface Out {
 export interface SystemEnvironment {
   out: Out
   resolver: Resolver
-}
-
-export interface TestSystemEnvironment {
-  out: TestOut
-  resolver: Resolver
+  config: Config
 }
 
 export interface APIError {
@@ -102,4 +97,4 @@ export interface APIError {
 }
 
 export type AuthTrigger = 'auth' | 'init' | 'quickstart'
-export type CheckAuth = (authTrigger: AuthTrigger) => Promise<boolean>
+export type CheckAuth = (env: SystemEnvironment, authTrigger: AuthTrigger) => Promise<boolean>
