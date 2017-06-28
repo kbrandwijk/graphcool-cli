@@ -1,7 +1,5 @@
 import { sendProjectMutation } from '../../api/api'
-import {
-  SystemEnvironment, Resolver
-} from '../../types'
+import { SystemEnvironment, Resolver } from '../../types'
 
 import * as JSONStream from 'JSONStream'
 import * as meter from 'stream-meter'
@@ -23,35 +21,36 @@ export class ImportEngine {
 
   private props: Props
 
-  // TODO: Now hardcoded to movie, because of issue reading type name from data file
   private mutationTemplate = (index, data) => `mut${index}: updateOrCreate${data.typeName}( update: { id: \"\"}, create: $obj${index}) { id }`
 
-  private batchMutationTemplate = (data, variables, typenames) => `mutation(${Object.keys(variables).map((k,index) => `$${k}: Create${typenames[index]}!`)}) { ${data.map(mutation => `${mutation}`).join(' ')} }`
+  private batchMutationTemplate = (data, variables, typenames) => `mutation(${Object.keys(variables).map((k, index) => `$${k}: Create${typenames[index]}!`)}) { ${data.map(mutation => `${mutation}`).join(' ')} }`
 
   private resolver: Resolver
 
-  private streamMeter:meter = meter()
+  private streamMeter: meter = meter()
 
-  private progressBar:ProgressBar = new ProgressBar('importing [:bar] :percent :etas', {
-      complete: '=',
-      incomplete: ' ',
-      width: 80,
-      total: 0
-    })
+  private progressBar: ProgressBar = new ProgressBar('Importing [:bar] :percent :etas', {
+    complete: '=',
+    incomplete: ' ',
+    width: 60,
+    total: 0
+  })
 
-  private importer:any
+  private importer: any
+
+  private start: number
 
   constructor(props: Props, env: SystemEnvironment) {
     this.props = props
     this.resolver = env.resolver
-    this.progressBar.total = fs.statSync(this.props.dataPath!).size // TODO: Move fs to resolver
-    this.props.batchSize = this.props.batchSize || 25
+    this.progressBar.total = this.resolver.size(this.props.dataPath!)
+    this.props.batchSize = Math.max(this.props.batchSize || 25, 50)
     this.importer = jsonImporter
   }
 
   private showMeter = () => {
-    const _self = this;
-    let bytesprocessed = 0;
+    const _self = this
+    let bytesprocessed = 0
     return through2.obj((data, enc, cb) => {
       if (_self.streamMeter.bytes - bytesprocessed > 0) {
         _self.progressBar.tick(_self.streamMeter.bytes - bytesprocessed)
@@ -61,14 +60,14 @@ export class ImportEngine {
     })
   }
 
-  mutationCount:number = 0;
   private toMutation = () => {
-    const _self = this;
+    let mutationCount = 0
+    const _self = this
     return through2.obj((data, enc, cb) => {
-      const mutation = _self.mutationTemplate(_self.mutationCount, data)
+      const mutation = _self.mutationTemplate(mutationCount, data)
       const variable = {}
-      variable[`obj${_self.mutationCount}`] = data.record
-      _self.mutationCount++
+      variable[`obj${mutationCount}`] = data.record
+      mutationCount++
       //console.log(_self.mutationCount)
       cb(null, { mutation, variable, typeName: data.typeName })
     })
@@ -100,47 +99,42 @@ export class ImportEngine {
         variables = {}
         cb(null, result)
       }
-      else
-      {
-        cb(null,null)
+      else {
+        cb(null, null)
       }
     }, function(cb) {
       if (i > 0) {
-      const batchMutation = _self.batchMutationTemplate(mutationBatch, variables, typeNames)
-      const result = { batchMutation, variables }
-      //console.log('variables length: ', Object.keys(variables).length)
-      i = 0
-      mutationBatch = []
-      typeNames = []
-      variables = {}
+        const batchMutation = _self.batchMutationTemplate(mutationBatch, variables, typeNames)
+        const result = { batchMutation, variables }
+        i = 0
+        mutationBatch = []
+        typeNames = []
+        variables = {}
 
-      cb(null,result)
-    }
+        cb(null, result)
+      }
     }
     )
   }
 
-  start:number
-
   private toConsole = () => {
-    const _self = this;
-
+    const _self = this
+    let persistedRecordCount = 0
     return through2.obj(function(data, enc, cb) {
-      cb(null, null);
+      persistedRecordCount += data
+      cb(null, null)
     }, function(cb) {
       let end = Date.now();
-      console.log(`Import done. Imported ${_self.mutationCount} records in ${end - _self.start}ms`)
+      console.log(`Import done. Imported ${persistedRecordCount} records in ${end - _self.start}ms`)
       cb()
-    });
-  };
+    })
+  }
 
   private toApi = () => {
-    const _self = this;
-    return through2concurrent.obj({ maxConcurrency: 8 }, async function(data, enc, cb) {
+    const _self = this
+    return through2concurrent.obj({ maxConcurrency: 10 }, async function(data, enc, cb) {
       const newChunk = await sendProjectMutation(_self.props.projectId, data)
-      //console.log('result: ', Object.keys(newChunk.data).length)
-      this.push(newChunk)
-      cb()
+      cb(null, Object.keys(newChunk.data).length)
     })
   };
 
@@ -148,7 +142,7 @@ export class ImportEngine {
 
   private getFileStream = () => this.resolver.readStream(this.props.dataPath!)
 
-  doImport = () => {
+  public doImport = () => {
 
     this.start = Date.now()
 
@@ -161,7 +155,7 @@ export class ImportEngine {
                         this.toConsole]
 
     let chain = lazypipe().pipe(this.importer.reader || this.getFileStream)
-    transforms.forEach((transform:any) => { chain = chain.pipe(transform) })
+    transforms.forEach((transform: any) => { chain = chain.pipe(transform) })
     chain()
   }
 }

@@ -14,6 +14,10 @@ export default class FileSystemResolver implements Resolver {
     return fs.readFileSync(path.resolve(fileUrl)).toString()
   }
 
+  size(fileUrl: string): number {
+    return fs.statSync(path.resolve(fileUrl)).size
+  }
+
   write(fileUrl: string, value: string) {
     fs.writeFileSync(path.resolve(fileUrl), value)
   }

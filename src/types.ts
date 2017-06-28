@@ -29,6 +29,7 @@ export type GraphcoolConfigOptionName = 'token'
 export interface Resolver {
   readStream(path: string): Readable
   read(path: string): string
+  size(path: string): number
   write(path: string, value: string)
   delete(path: string)
   exists(path: string): boolean

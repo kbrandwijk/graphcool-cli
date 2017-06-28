@@ -41,6 +41,20 @@ export default class TestResolver implements Resolver {
     return this.storage[path]
   }
 
+  size(path: string): number {
+    // absolute path
+    if (path.startsWith('/')) {
+      return this.storage[path].length
+    }
+
+    // prepend ./ if necessary
+    if (!path.startsWith('./')) {
+      path = `./${path}`
+    }
+
+    return this.storage[path].length
+  }
+
   write(path: string, value: string) {
     // absolute path
     if (path.startsWith('/')) {
