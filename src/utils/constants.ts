@@ -179,10 +179,6 @@ export const noDataForImportMessage = `\
 Please provide a valid data file for the import using --data.
 `
 
-export const noTypeSpecifiedForImportMessage = `\
-Please provide a valid type for the import using --type.
-`
-
 export const invalidProjectFileMessage = `\
 The project file (${graphcoolProjectFileName}) that you provided doesn't seem to be valid. Please make sure it contains the ID of your project.
 `

@@ -145,8 +145,9 @@ async function main() {
       await checkAuth(env, 'auth')
 
       const batchSize = argv['batch'] || argv['b']
+      const format = argv['format'] || argv['f']
       const dataPath = argv._[1]
-      const props = {dataPath, batchSize}
+      const props = {dataPath, batchSize, format}
       await importCommand(props, defaultEnvironment())
       break
     }

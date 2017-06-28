@@ -29,7 +29,7 @@ export function optionsForCommand(command: Command): string[] {
     case 'auth':
       return ['token', 't']
     case 'import':
-      return ['batch', 'b', 'type', 't']
+      return ['batch', 'b', 'format', 'f']
   }
   return []
 }

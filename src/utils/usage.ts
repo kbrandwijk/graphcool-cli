@@ -36,7 +36,7 @@ export const usageRoot = (showQuickstart: boolean) => `
   ${chalk.gray('-')} Import project data from JSON file
     ${chalk.cyan('$ graphcool init --schema http://graphqlbin.com/movies-import.graphql')}
     ${chalk.cyan('$ curl http://static.graph.cool.s3.amazonaws.com/dumps/movies.json > movies.json')}
-    ${chalk.cyan('$ graphcool import movies.json --batch 20')}
+    ${chalk.cyan('$ graphcool import movies.json --format JSON --batch 20')}
 
 `
 
@@ -139,9 +139,9 @@ export const usageImport = `
   Import project data
 
   Options:
-    -b, --batch           Batch size for import (default: 10)
-    -t, --type            Graphcool type to import data to (required)
-    -h, --help            Output usage information
+    -b, --batch            Batch size for import (default: 25)
+    -f, --format <format>  Import file format (default: JSON, options: JSON)
+    -h, --help             Output usage information
 
   ${chalk.dim('Examples:')}
 

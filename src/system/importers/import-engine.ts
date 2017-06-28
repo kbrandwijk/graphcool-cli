@@ -1,12 +1,10 @@
 import { sendProjectMutation } from '../../api/api'
 import { SystemEnvironment, Resolver } from '../../types'
 
-import * as JSONStream from 'JSONStream'
 import * as meter from 'stream-meter'
 import * as ProgressBar from 'progress'
 import * as through2 from 'through2'
 import * as through2concurrent from 'through2-concurrent'
-import * as fs from 'fs'
 import * as lazypipe from 'lazypipe'
 
 import * as jsonImporter from './jsonImporter'
@@ -15,6 +13,7 @@ interface Props {
   projectId: string
   dataPath: string
   batchSize?: number
+  format?: string
 }
 
 export class ImportEngine {
@@ -45,7 +44,8 @@ export class ImportEngine {
     this.resolver = env.resolver
     this.progressBar.total = this.resolver.size(this.props.dataPath!)
     this.props.batchSize = Math.max(this.props.batchSize || 25, 50)
-    this.importer = jsonImporter
+
+    this.importer = jsonImporter //Ignore format argument for now
   }
 
   private showMeter = () => {

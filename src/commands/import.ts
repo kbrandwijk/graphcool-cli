@@ -5,7 +5,6 @@ import {
 import {
   invalidProjectFileMessage,
   noDataForImportMessage,
-  noTypeSpecifiedForImportMessage,
   multipleProjectFilesMessage,
   noProjectFileForImportMessage
 } from '../utils/constants'
@@ -17,14 +16,10 @@ import {
   ImportEngine
 } from '../system/importers/import-engine'
 
-
-import * as fs from 'fs'
-import * as ProgressBar from 'progress'
-import * as meter from 'stream-meter'
-
 interface Props {
   dataPath?: string
   batchSize?: number
+  format?: string
 }
 
 export default async (props: Props, env: SystemEnvironment): Promise<void> => {
@@ -47,7 +42,8 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
   const importer = new ImportEngine({
     projectId: projectInfo.projectId,
     dataPath: props.dataPath,
-    batchSize: props.batchSize}, env)
+    batchSize: props.batchSize,
+    format: props.format}, env)
 
   importer.doImport()
 }
