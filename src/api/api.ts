@@ -412,8 +412,8 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
   return projectInfo
 }
 
-export async function sendProjectMutation(projectId: string, mutation: string): Promise<any> {
-  const json = await sendProjectGraphQLRequest(projectId, mutation, {});
+export async function sendProjectMutation(projectId: string, data: any): Promise<any> {
+  const json = await sendProjectGraphQLRequest(projectId, data.batchMutation, data.variables);
   return json;
 }
 

@@ -24,9 +24,9 @@ export class ImportEngine {
   private props: Props
 
   // TODO: Now hardcoded to movie, because of issue reading type name from data file
-  private mutationTemplate = (index, data) => `mut${index}: createMovie( ${data.map(field => `${field[0]}: \"${field[1]}\"`).join(', ')}) { id }`
+  private mutationTemplate = (index, data) => `mut${index}: updateOrCreate${data.typeName}( update: { id: \"\"}, create: $obj${index}) { id }`
 
-  private batchMutationTemplate = data => `mutation { ${data.map(mutation => `${mutation}`).join(' ')} }`
+  private batchMutationTemplate = (data, variables, typenames) => `mutation(${Object.keys(variables).map((k,index) => `$${k}: Create${typenames[index]}!`)}) { ${data.map(mutation => `${mutation}`).join(' ')} }`
 
   private resolver: Resolver
 
@@ -35,7 +35,7 @@ export class ImportEngine {
   private progressBar:ProgressBar = new ProgressBar('importing [:bar] :percent :etas', {
       complete: '=',
       incomplete: ' ',
-      width: 50,
+      width: 80,
       total: 0
     })
 
@@ -61,48 +61,61 @@ export class ImportEngine {
     })
   }
 
-  private toFieldArray = () => {
-    return through2.obj((data, enc, cb) => {
-      console.log('data', data);
-      const out = Object.keys(data).map(d => [d, data[d]])
-      cb(null, out)
-    })
-  }
-
   mutationCount:number = 0;
   private toMutation = () => {
     const _self = this;
     return through2.obj((data, enc, cb) => {
-      //console.log('data', data)
-      const result = _self.mutationTemplate(_self.mutationCount, data)
-      //console.log('result', result)
+      const mutation = _self.mutationTemplate(_self.mutationCount, data)
+      const variable = {}
+      variable[`obj${_self.mutationCount}`] = data.record
       _self.mutationCount++
-      cb(null, result)
+      //console.log(_self.mutationCount)
+      cb(null, { mutation, variable, typeName: data.typeName })
     })
   }
 
   private toBatchMutation = () => {
     const _self = this
     let i = 0
-    let batch: any = []
+    let mutationBatch: any = []
+    let typeNames: any = []
+    let variables = {}
 
     return through2.obj((data, enc, cb) => {
-      if (i++ < _self.props.batchSize!) {
-        batch.push(data)
-        cb(null, null)
-      }
-      else {
-        const result = _self.batchMutationTemplate(batch)
+
+      const { mutation, variable, typeName } = data
+      mutationBatch.push(mutation)
+      typeNames.push(typeName)
+      variables = Object.assign(variables, variable)
+      i++
+
+      if (i == _self.props.batchSize) {
+        const batchMutation = _self.batchMutationTemplate(mutationBatch, variables, typeNames)
+        const result = { batchMutation, variables }
+        //console.log('variables length: ', Object.keys(variables).length)
+        //console.log('batchMutation', batchMutation)
         i = 0
-        batch = []
+        mutationBatch = []
+        typeNames = []
+        variables = {}
         cb(null, result)
       }
+      else
+      {
+        cb(null,null)
+      }
     }, function(cb) {
-      const result = _self.batchMutationTemplate(batch)
+      if (i > 0) {
+      const batchMutation = _self.batchMutationTemplate(mutationBatch, variables, typeNames)
+      const result = { batchMutation, variables }
+      //console.log('variables length: ', Object.keys(variables).length)
       i = 0
-      batch = []
-      this.push(result)
-      cb()
+      mutationBatch = []
+      typeNames = []
+      variables = {}
+
+      cb(null,result)
+    }
     }
     )
   }
@@ -125,6 +138,7 @@ export class ImportEngine {
     const _self = this;
     return through2concurrent.obj({ maxConcurrency: 8 }, async function(data, enc, cb) {
       const newChunk = await sendProjectMutation(_self.props.projectId, data)
+      //console.log('result: ', Object.keys(newChunk.data).length)
       this.push(newChunk)
       cb()
     })
@@ -138,19 +152,16 @@ export class ImportEngine {
 
     this.start = Date.now()
 
-    let chain = lazypipe()
-      .pipe(this.importer.reader || this.getFileStream)
-      .pipe(this.getStreamMeter)
-      .pipe(this.showMeter)
+    const transforms = [this.getStreamMeter,
+                        this.showMeter,
+                        ...this.importer.transforms,
+                        this.toMutation,
+                        this.toBatchMutation,
+                        this.toApi,
+                        this.toConsole]
 
-    this.importer.transforms.forEach((element:any) => {
-      chain = chain.pipe(element)
-    })
-
-    chain.pipe(this.toFieldArray)
-      .pipe(this.toMutation)
-      .pipe(this.toBatchMutation)
-      .pipe(this.toApi)
-      .pipe(this.toConsole)()
+    let chain = lazypipe().pipe(this.importer.reader || this.getFileStream)
+    transforms.forEach((transform:any) => { chain = chain.pipe(transform) })
+    chain()
   }
 }

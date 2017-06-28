@@ -1,7 +1,16 @@
 import * as JSONStream from 'JSONStream'
+import * as through2 from 'through2'
 
 function toJSON() {
-  return JSONStream.parse([true, true, {emitPath:true}])
+  return JSONStream.parse([true, {emitPath:true}])
 }
 
-export const transforms = [toJSON]
+function toTypeValueArray() {
+  const _self = this;
+  return through2.obj((data, enc, cb) => {
+    const result = { record: data.value, typeName: data.path[0] }
+    cb(null, result)
+  })
+}
+
+export const transforms = [toJSON, toTypeValueArray]
