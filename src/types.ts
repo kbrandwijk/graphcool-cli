@@ -53,6 +53,7 @@ export interface ProjectInfo {
   schema: string
   version: string
   alias: string
+  region: string
 }
 
 export interface MigrationMessage {

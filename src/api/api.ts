@@ -97,6 +97,7 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
       schema
       alias
       version
+      region
     }
   }
 }
@@ -121,8 +122,9 @@ mutation addProject($schema: String!, $name: String!, $alias: String, $region: R
   schema = json.data.addProject.project.schema
   const returnedAlias = json.data.addProject.project.alias
   name = json.data.addProject.project.name
+  const returnedRegion = json.data.addProject.project.region
 
-  const projectInfo = { projectId, version, alias: returnedAlias, schema, name }
+  const projectInfo = {projectId, version, alias: returnedAlias, schema, name, region: returnedRegion}
 
   return projectInfo
 }
@@ -245,7 +247,7 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
   const query = `\
 {
   viewer {
-	  user {
+    user {
       projects {
         edges {
           node {
@@ -254,6 +256,7 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
             schema
             alias
             version
+            region
           }
         }
       }
@@ -270,6 +273,7 @@ export async function fetchProjects(resolver: Resolver): Promise<[ProjectInfo]> 
     alias: p.alias,
     schema: p.schema,
     version: p.version,
+    region: p.region,
   }))
 
   return projectInfos
@@ -286,6 +290,7 @@ query ($projectId: ID!){
       alias
       schema
       version
+      region
     }
   }
 }`
@@ -304,6 +309,7 @@ query ($projectId: ID!){
     schema: json.data.viewer.project.schema,
     alias: json.data.viewer.project.alias,
     version: String(json.data.viewer.project.version),
+    region: json.data.viewer.project.region,
   }
   return projectInfo
 }
@@ -382,6 +388,7 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
       alias
       schema
       version
+      region
     }
   }
 }`
@@ -399,6 +406,7 @@ mutation ($projectId: String!, $name: String!, $includeMutationCallbacks: Boolea
     schema: json.data.cloneProject.project.schema,
     alias: json.data.cloneProject.project.alias,
     version: String(json.data.cloneProject.project.version),
+    region: json.data.cloneProject.project.region,
   }
 
   return projectInfo

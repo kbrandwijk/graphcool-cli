@@ -63,6 +63,7 @@ export class ImportEngine {
 
   private toFieldArray = () => {
     return through2.obj((data, enc, cb) => {
+      console.log('data', data);
       const out = Object.keys(data).map(d => [d, data[d]])
       cb(null, out)
     })
