@@ -68,7 +68,7 @@ export class ImportEngine {
       const variable = {}
       variable[`obj${mutationCount}`] = data.record
       mutationCount++
-      //console.log(_self.mutationCount)
+      
       cb(null, { mutation, variable, typeName: data.typeName })
     })
   }
@@ -140,7 +140,7 @@ export class ImportEngine {
 
   private getStreamMeter = () => this.streamMeter
 
-  private getFileStream = () => this.resolver.readStream(this.props.dataPath!)
+  private getFileStream = (filepath) => this.resolver.readStream(filepath)
 
   public doImport = () => {
 
@@ -154,7 +154,7 @@ export class ImportEngine {
                         this.toApi,
                         this.toConsole]
 
-    let chain = lazypipe().pipe(this.importer.reader || this.getFileStream)
+    let chain = lazypipe().pipe(this.importer.reader || this.getFileStream, this.props.dataPath!)
     transforms.forEach((transform: any) => { chain = chain.pipe(transform) })
     chain()
   }
