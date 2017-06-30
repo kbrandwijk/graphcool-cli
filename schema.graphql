@@ -1,0 +1,19 @@
+type Movie {
+  id: Int! @isUnique
+  voteCount: Int!
+  voteAverage: Float!
+  title: String!
+  originalTitle: String!
+  originalLanguage: String!
+  description: String!
+  releaseDate: DateTime!
+  reviews: [Review!]! @relation(name: "MovieReviews")
+}
+
+type Review {
+  id: Int! @isUnique
+  author: String!
+  content: String!
+  url: String!
+  movie: Movie! @relation(name: "MovieReviews")
+}
