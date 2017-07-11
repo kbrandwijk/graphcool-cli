@@ -5,7 +5,7 @@ function toJSON() {
   return JSONStream.parse([true, {emitPath:true}])
 }
 
-function toTypeValueArray() {
+function toNormalizedData() {
   const _self = this;
   return through2.obj((data, enc, cb) => {
     const result = { record: data.value, typeName: data.path[0] }
@@ -13,4 +13,4 @@ function toTypeValueArray() {
   })
 }
 
-export const transforms = [toJSON, toTypeValueArray]
+export const transforms = [toJSON, toNormalizedData]

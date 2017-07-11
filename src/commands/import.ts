@@ -45,7 +45,7 @@ export default async (props: Props, env: SystemEnvironment): Promise<void> => {
     batchSize: props.batchSize,
     format: props.format}, env)
 
-  importer.doImport()
+  await importer.doImport()
 }
 
 function getProjectFilePath(props: Props, resolver: Resolver): string {

@@ -17,7 +17,7 @@
     "dist"
   ],
   "include": [
-    "./src/**/*.ts",
+    "./src/index.ts",
     "./tests/**/*.ts",
     "./custom.d.ts"
   ]
