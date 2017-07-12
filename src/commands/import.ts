@@ -14,7 +14,7 @@ import {
 
 import {
   ImportEngine
-} from '../system/importers/import-engine'
+} from '../system/import/import-engine'
 
 interface Props {
   dataPath?: string
